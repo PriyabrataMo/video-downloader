@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { url } = await req.json();
+    const body: { url?: string } = await req.json();
+    const { url } = body;
 
     if (!url) {
       return NextResponse.json(
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const options = {
       method: "POST",
       headers: {
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY as string,
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY ?? "",
         "x-rapidapi-host": "social-download-all-in-one.p.rapidapi.com",
         "Content-Type": "application/json",
       },
@@ -29,11 +30,12 @@ export async function POST(req: NextRequest) {
 
     console.log("API Response:", result);
 
-    // Extract the highest quality video link
-    if (result && result.medias && result.medias.length > 0) {
+    if (Array.isArray(result.medias) && result.medias.length > 0) {
       const highestQualityVideo =
-        result.medias.find((media: any) => media.quality === "HD") ||
-        result.medias[0];
+        result.medias.find(
+          (media: { quality: string }) => media.quality === "HD"
+        ) || result.medias[0];
+
       return NextResponse.json({
         title: result.title || "Facebook Video",
         thumbnail: result.thumbnail,
